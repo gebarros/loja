@@ -1,37 +1,64 @@
 class ProdutosController < ApplicationController
+  before_action :set_produto, only: [:edit, :update, :destroy]
 
-    def index
-        @produtos = Produto.order(nome: :asc).limit 6
-        @produto_com_desconto = Produto.order(:preco).limit 1
-    end
+  def index
+      @produtos = Produto.order(nome: :asc).limit 6
+      @produto_com_desconto = Produto.order(:preco).limit 1
+  end
 
-    def new
-      @produto = Produto.new
-    end
+  def new
+    @produto = Produto.new
+    @departamentos = Departamento.all
+  end
 
-    def create
-      valores = params.require(:produto).permit(:nome,:descricao, :preco, :quantidade)
-      @produto = Produto.new valores
+  def edit
+    renderiza :edit
+  end
 
-      if @produto.save
-        flash[:notice] = "Produto salvo com sucesso!"
+  def update
+      if @produto.update produto_params
+        flash[:notice] = "Produto atualizado com sucesso!"
         redirect_to root_url
       else
-        render :new
-
+        renderiza :edit
       end
-    end
+  end
 
-    def destroy
-      id = params[:id]
-      Produto.destroy id
+  def create
+    @produto = Produto.new produto_params
+
+    if @produto.save
+      flash[:notice] = "Produto salvo com sucesso!"
       redirect_to root_url
+    else
+      renderiza :new
     end
+  end
 
-    def busca
-      @nome = params[:nome]
-      @produtos = Produto.where "nome like ?", "%#{@nome}%"
+  def destroy
+    @produto.destroy
+    redirect_to root_url
+  end
 
-    end
+  def busca
+    @nome = params[:nome]
+    @produtos = Produto.where "nome like ?", "%#{@nome}%"
+
+  end
+
+  private
+  def produto_params
+    params.require(:produto).permit(:nome,:descricao, :preco,
+      :quantidade, :departamento_id)
+  end
+
+  def set_produto
+    @produto = Produto.find(params[:id])
+  end
+
+  def renderiza(view)
+    @departamentos = Departamento.all
+    render view
+  end
 
 end
